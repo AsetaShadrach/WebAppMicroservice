@@ -1,21 +1,18 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateUserRequestDto, CreateUserResponseDto } from '../src/shared/dto/user.dto';
-import { CreateCompanyRequestDto, CreateCompanyResponseDto, recentActionsDto } from '../src/shared/dto/company.dto';
-import { User } from 'src/shared/entities/user.entity';
-import { Company } from 'src/shared/entities/company.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { GenericResponseDto } from './shared/dto/generic.dto';
 import { ClientKafka } from '@nestjs/microservices';
+import { Company,User,Role,
+CompanyDto,UserDto,GenericDto} from 'kawaida';
 
 @Injectable()
 export class AppService  {
   constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-    @InjectRepository(Company)
-    private companyRepository: Repository<Company>,
+    @InjectRepository(User.User)
+    private userRepository: Repository<User.User>,
+    @InjectRepository(Company.Company)
+    private companyRepository: Repository<Company.Company>,
     @Inject('NOTIFICATIONS_SERVICE') private readonly notificationClient:ClientKafka,
   ) {}
 
@@ -24,13 +21,13 @@ export class AppService  {
   }
 
   // CREATE USER
-  async createUser(user: CreateUserRequestDto): Promise<CreateUserResponseDto> {
+  async createUser(user: UserDto.CreateUserRequestDto): Promise<UserDto.CreateUserResponseDto> {
 
     try {
       const hashedPassword = await bcrypt.hash(user.password, 17);
       const userPhoneNumber = `254${user.phoneNumber.slice(user.phoneNumber.length-9)}`
-      const newUser = await this.userRepository.save({ ...user, password: hashedPassword , phoneNumber: userPhoneNumber });
-      const response = {
+      const newUser = await this.userRepository.save({ ...user, passwordHash: hashedPassword , phoneNumber: userPhoneNumber });
+      const response: UserDto.CreateUserResponseDto = {
         statusCode : 200,
         response: 'User successfully created',
         responseDescription: {
@@ -107,7 +104,7 @@ export class AppService  {
   }
   
   // CREATE COMPANY
-  async createcompany(companyBody: CreateCompanyRequestDto): Promise<CreateCompanyResponseDto | GenericResponseDto> {
+  async createcompany(companyBody: CompanyDto.CreateCompanyRequestDto): Promise<CompanyDto.CreateCompanyResponseDto | GenericDto.GenericResponseDto> {
     try {
       const user = await this.userRepository.findOne({ where: {id:companyBody.userId} }) 
       if (!user){
@@ -118,7 +115,7 @@ export class AppService  {
         }
       }else{
 
-        const currentActions: recentActionsDto = {
+        const currentActions: CompanyDto.RecentActionsDto = {
             'userId': user.id,
             'name': user.firstName,
             'action':'Created company',
