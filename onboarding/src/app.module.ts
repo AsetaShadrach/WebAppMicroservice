@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -5,10 +6,6 @@ import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { Company, Role, User } from 'kawaida';
-
-
-const path = require('path')
-console.log("THIS IS THE DIRECTORY =====" , path.join(__dirname, '../node_modules/kawaida/dist',  '/**/*.entity{.ts,.js}'))
 
 @Module({
   imports: [
@@ -27,8 +24,6 @@ console.log("THIS IS THE DIRECTORY =====" , path.join(__dirname, '../node_module
           synchronize: configService.get<boolean>('TYPEORM_SYNCHRONIZE'),
           logging: configService.get<boolean>('TYPEORM_LOGGING'),
           entities: [path.join(__dirname, '../node_modules/kawaida/dist',  '/**/*.entity{.ts,.js}')],
-          // entities: [__dirname + '/**/*.entity{.ts,.js}'],
-          // entities: [KawaidaEntity.User, KawaidaEntity.Company, KawaidaEntity.Role, ]
       }),
     }),
     ClientsModule.register([
